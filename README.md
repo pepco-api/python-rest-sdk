@@ -5,7 +5,7 @@ Python SDK for Pasargad Internet Payment Gateway (RESTful API)
 ## Installation
 
 ```bash
-pip install pypep
+pip install pypep-pepco
 ```
 
 ## Usage
