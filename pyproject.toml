@@ -1,0 +1,7 @@
+[build-system]
+requires = [
+    "pycryptodome>=3.10.1",
+    "requests>=2.15,<3",
+    "setuptools>=42"
+]
+build-backend = "setuptools.build_meta"
