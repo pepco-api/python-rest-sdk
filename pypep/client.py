@@ -2,6 +2,7 @@
 from __future__ import absolute_import
 import json
 from .compat import Request, urlopen, HTTPError
+import logging
 
 from Crypto.Util import number
 from Crypto.Hash import SHA1
@@ -73,21 +74,25 @@ class Pasargad(object):
         return number.bytes_to_long(b64decode(string))
 
     def _convert_xml_key_to_pem(self, xml_private_key_file):
-        with open(xml_private_key_file, 'rb') as pkFile:
-            xml_private_key = pkFile.read()
-        rsa_key_value = minidom.parseString(xml_private_key)
-        modulus = self._process_xml_node(
-            rsa_key_value.getElementsByTagName('Modulus')[0].childNodes)
-        exponent = self._process_xml_node(
-            rsa_key_value.getElementsByTagName('Exponent')[0].childNodes)
-        d = self._process_xml_node(
-            rsa_key_value.getElementsByTagName('D')[0].childNodes)
-        p = self._process_xml_node(
-            rsa_key_value.getElementsByTagName('P')[0].childNodes)
-        q = self._process_xml_node(
-            rsa_key_value.getElementsByTagName('Q')[0].childNodes)
-        private_key = RSA.construct((modulus, exponent, d, p, q))
-        return private_key
+        try:
+            with open(xml_private_key_file, 'rb') as pkFile:
+                xml_private_key = pkFile.read()
+            rsa_key_value = minidom.parseString(xml_private_key)
+            modulus = self._process_xml_node(
+                rsa_key_value.getElementsByTagName('Modulus')[0].childNodes)
+            exponent = self._process_xml_node(
+                rsa_key_value.getElementsByTagName('Exponent')[0].childNodes)
+            d = self._process_xml_node(
+                rsa_key_value.getElementsByTagName('D')[0].childNodes)
+            p = self._process_xml_node(
+                rsa_key_value.getElementsByTagName('P')[0].childNodes)
+            q = self._process_xml_node(
+                rsa_key_value.getElementsByTagName('Q')[0].childNodes)
+            private_key = RSA.construct((modulus, exponent, d, p, q))
+            return private_key
+        except Exception as err:
+            logging.log(logging.ERROR, 'XML file is not valid')
+            raise SystemExit(err)
 
     # Generate Timestamp in format of "Y/m/d H:i:s" ========
     @staticmethod
