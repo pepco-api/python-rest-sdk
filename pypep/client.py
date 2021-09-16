@@ -1,7 +1,8 @@
 # coding: utf-8
 from __future__ import absolute_import
 import json
-from .compat import HTTPError, Request, urlopen, urlencode
+from .compat import Request, urlopen, HTTPError
+
 from Crypto.Util import number
 from Crypto.Hash import SHA1
 from Crypto.PublicKey import RSA
@@ -10,12 +11,14 @@ from datetime import datetime
 from base64 import b64encode, b64decode
 from xml.dom import minidom
 
+
 # API Error for catching Exceptions
 class ApiError(Exception):
     def __init__(self, code, description=''):
         super(ApiError, self).__init__(
             'Result code: %s (%s)' % (code, description))
         self.code = code
+
 
 ########################################
 # Pasargad Payment API Wrapper
@@ -32,9 +35,9 @@ class Pasargad(object):
     URL_VERIFY_PAYMENT = "https://pep.shaparak.ir/Api/v1/Payment/VerifyPayment"
     URL_REFUND = "https://pep.shaparak.ir/Api/v1/Payment/RefundPayment"
 
-    ### Pasargad Constructor ====================
+    # Pasargad Constructor ====================
     def __init__(self, merchant_code, terminal_id, redirect_url, certification_file):
-        # type: (str, str, str, str) -> dict
+        # type: (str, str, str, str) -> None
         """
         :param merchant_code: Merchant Code of the merchant
         :param terminal_id: TerminalId of the merchant
@@ -45,22 +48,23 @@ class Pasargad(object):
         self.terminal_id = terminal_id
         self.redirect_url = redirect_url
         self.certification_file = certification_file
-        self.key_pair = self._convertXMLKeyToPem(self.certification_file)
+        self.key_pair = self._convert_xml_key_to_pem(self.certification_file)
 
-    ### Make Sign Data ====================
+    # Make Sign Data ====================
     def _make_sign(self, data):
         # type: (dict) -> bytes
-        keyPair = self.key_pair
+        key_pair = self.key_pair
         # Sign the message using the PKCS#1 v1.5 signature scheme (RSASP1)
-        serializedData = json.dumps(data).encode('utf8')
-        hash = SHA1.new(serializedData)
-        signer = PKCS115_SigScheme(keyPair)
-        signature = signer.sign(hash)
-        finalSign = b64encode(signature)
-        return finalSign
+        serialized_data = json.dumps(data).encode('utf8')
+        hash_data = SHA1.new(serialized_data)
+        signer = PKCS115_SigScheme(key_pair)
+        signature = signer.sign(hash_data)
+        final_sign = b64encode(signature)
+        return final_sign
 
-    ### Process RSA key ====================
-    def _processXmlNode(self, nodelist):
+    # Process RSA key ====================
+    @staticmethod
+    def _process_xml_node(nodelist):
         rc = []
         for node in nodelist:
             if node.nodeType == node.TEXT_NODE:
@@ -68,30 +72,30 @@ class Pasargad(object):
         string = ''.join(rc)
         return number.bytes_to_long(b64decode(string))
 
-    def _convertXMLKeyToPem(self, xmlPrivateKeyFile):
-        with open(xmlPrivateKeyFile, 'rb') as pkFile:
-            xmlPrivateKey = pkFile.read()
-        rsaKeyValue = minidom.parseString(xmlPrivateKey)
-        modulus = self._processXmlNode(
-            rsaKeyValue.getElementsByTagName('Modulus')[0].childNodes)
-        exponent = self._processXmlNode(
-            rsaKeyValue.getElementsByTagName('Exponent')[0].childNodes)
-        d = self._processXmlNode(
-            rsaKeyValue.getElementsByTagName('D')[0].childNodes)
-        p = self._processXmlNode(
-            rsaKeyValue.getElementsByTagName('P')[0].childNodes)
-        q = self._processXmlNode(
-            rsaKeyValue.getElementsByTagName('Q')[0].childNodes)
-        privateKey = RSA.construct((modulus, exponent, d, p, q))
-        return privateKey
+    def _convert_xml_key_to_pem(self, xml_private_key_file):
+        with open(xml_private_key_file, 'rb') as pkFile:
+            xml_private_key = pkFile.read()
+        rsa_key_value = minidom.parseString(xml_private_key)
+        modulus = self._process_xml_node(
+            rsa_key_value.getElementsByTagName('Modulus')[0].childNodes)
+        exponent = self._process_xml_node(
+            rsa_key_value.getElementsByTagName('Exponent')[0].childNodes)
+        d = self._process_xml_node(
+            rsa_key_value.getElementsByTagName('D')[0].childNodes)
+        p = self._process_xml_node(
+            rsa_key_value.getElementsByTagName('P')[0].childNodes)
+        q = self._process_xml_node(
+            rsa_key_value.getElementsByTagName('Q')[0].childNodes)
+        private_key = RSA.construct((modulus, exponent, d, p, q))
+        return private_key
 
-
-    ### Generate Timestamp in format of "Y/m/d H:i:s" ========
-    def _generate_timestamp(self):
+    # Generate Timestamp in format of "Y/m/d H:i:s" ========
+    @staticmethod
+    def _generate_timestamp():
         return datetime.today().strftime('%Y/%m/%d %H:%M:%S')
 
-    ### API Request Builder ============================
-    def _requestBuilder(self, url, data, method='POST'):
+    # API Request Builder ============================
+    def _request_builder(self, url, data, method='POST'):
         # type: (str, dict, str) -> dict
         request = Request(url, headers={
             'Accept': 'application/json',
@@ -109,12 +113,12 @@ class Pasargad(object):
             response = e
 
         response = json.loads(response.read().decode('utf-8'))
-        if response['IsSuccess'] != True:
+        if not response['IsSuccess']:
             raise ApiError(400, response['Message'])
         else:
             return response
 
-    ### Generate Redirect Address for payment ====================================
+    # Generate Redirect Address for payment ====================================
     def redirect(self, amount, invoice_number, invoice_date, mobile='', email=''):
         # type: (str, str, str, str, str) -> dict
         """
@@ -138,11 +142,11 @@ class Pasargad(object):
             'RedirectAddress': self.redirect_url,
             'TimeStamp': self._generate_timestamp(),
         }
-        response = self._requestBuilder(self.URL_GET_TOKEN, params, 'POST')
+        response = self._request_builder(self.URL_GET_TOKEN, params, 'POST')
         return self.URL_PAYMENT_GATEWAY + "?n=" + response["Token"]
 
-    ### check transaction ================================================
-    def checkTransaction(self, reference_id, invoice_number, invoice_date):
+    # check transaction ================================================
+    def check_transaction(self, reference_id, invoice_number, invoice_date):
         # type: (str, str, str) -> dict
         """
         Check Transaction 
@@ -158,12 +162,12 @@ class Pasargad(object):
             'merchantCode': self.merchant_code,
             'terminalCode': self.terminal_id,
         }
-        response = self._requestBuilder(
+        response = self._request_builder(
             self.URL_CHECK_TRANSACTION, params, 'POST')
         return response
 
-    #### Verify Payment =========================================
-    def verifyPayment(self, amount, invoice_number, invoice_date):
+    # Verify Payment =========================================
+    def verify_payment(self, amount, invoice_number, invoice_date):
         # type: (str, str, str) -> dict
         """
         Verify Payment 
@@ -180,11 +184,11 @@ class Pasargad(object):
             'terminalCode': self.terminal_id,
             'timeStamp': self._generate_timestamp(),
         }
-        response = self._requestBuilder(
+        response = self._request_builder(
             self.URL_VERIFY_PAYMENT, params, 'POST')
         return response
 
-    ### Refund ====================================
+    # Refund ====================================
     def refund(self, invoice_number, invoice_date):
         # type: (str, str) -> dict
         """
@@ -200,5 +204,5 @@ class Pasargad(object):
             'terminalCode': self.terminal_id,
             'timeStamp': self._generate_timestamp(),
         }
-        response = self._requestBuilder(self.URL_REFUND, params, 'POST')
+        response = self._request_builder(self.URL_REFUND, params, 'POST')
         return response

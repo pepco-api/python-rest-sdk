@@ -49,15 +49,16 @@ Store this information in a proper data storage and let's check transaction resu
 
 ```python
     from pypep import Pasargad
-    # Create an object from Pasargad client
-    # e.q: pasargad = Pasargad(123123,444444,"https://pep.co.ir/ipgtest","cert.xml")
-    pasargad = Pasargad('<merchant_code>', '<terminal_id>', '<redirect_url>', '<certification_file>')
 
-    response = pasargad.checkTransaction(
-        reference_id="637653306794022509",
-        invoice_number="15001",
-        invoice_date="2021/08/23 15:51:00",
-    )
+# Create an object from Pasargad client
+# e.q: pasargad = Pasargad(123123,444444,"https://pep.co.ir/ipgtest","cert.xml")
+pasargad = Pasargad('<merchant_code>', '<terminal_id>', '<redirect_url>', '<certification_file>')
+
+response = pasargad.check_transaction(
+    reference_id="637653306794022509",
+    invoice_number="15001",
+    invoice_date="2021/08/23 15:51:00",
+)
 ```
 
 Successful result:
@@ -81,18 +82,18 @@ If you got `IsSuccess` with `true` value, so everything is O.K!
 
 Now, for your successful transaction, you should call `verifyPayment()` method to keep the money and Bank makes sure the checking process done properly:
 
-
 ```python
     from pypep import Pasargad
-    # Create an object from Pasargad client
-    # e.q: pasargad = Pasargad(123123,444444,"https://pep.co.ir/ipgtest","cert.xml")
-    pasargad = Pasargad('<merchant_code>', '<terminal_id>', '<redirect_url>', '<certification_file>')
 
-    response = pasargad.verifyPayment(
-        amount=15000,
-        invoice_number="15001",
-        invoice_date="2021/08/23 15:51:00",
-    )
+# Create an object from Pasargad client
+# e.q: pasargad = Pasargad(123123,444444,"https://pep.co.ir/ipgtest","cert.xml")
+pasargad = Pasargad('<merchant_code>', '<terminal_id>', '<redirect_url>', '<certification_file>')
+
+response = pasargad.verify_payment(
+    amount=15000,
+    invoice_number="15001",
+    invoice_date="2021/08/23 15:51:00",
+)
 ```
 
 ...and the successful response looks like this response:
