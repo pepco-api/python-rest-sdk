@@ -2,6 +2,7 @@
 from __future__ import absolute_import
 import json
 from .compat import Request, urlopen, HTTPError
+import logging
 
 from Crypto.Util import number
 from Crypto.Hash import SHA1
@@ -44,16 +45,16 @@ class Pasargad(object):
         :param redirect_url: Redirect URL
         :param certification_file:  Certificate file location
         """
-        self.merchant_code = merchant_code
-        self.terminal_id = terminal_id
-        self.redirect_url = redirect_url
-        self.certification_file = certification_file
-        self.key_pair = self._convert_xml_key_to_pem(self.certification_file)
+        self._merchant_code = merchant_code
+        self._terminal_id = terminal_id
+        self._redirect_url = redirect_url
+        self._certification_file = certification_file
+        self._key_pair = self._convert_xml_key_to_pem(self._certification_file)
 
     # Make Sign Data ====================
     def _make_sign(self, data):
         # type: (dict) -> bytes
-        key_pair = self.key_pair
+        key_pair = self._key_pair
         # Sign the message using the PKCS#1 v1.5 signature scheme (RSASP1)
         serialized_data = json.dumps(data).encode('utf8')
         hash_data = SHA1.new(serialized_data)
@@ -73,21 +74,25 @@ class Pasargad(object):
         return number.bytes_to_long(b64decode(string))
 
     def _convert_xml_key_to_pem(self, xml_private_key_file):
-        with open(xml_private_key_file, 'rb') as pkFile:
-            xml_private_key = pkFile.read()
-        rsa_key_value = minidom.parseString(xml_private_key)
-        modulus = self._process_xml_node(
-            rsa_key_value.getElementsByTagName('Modulus')[0].childNodes)
-        exponent = self._process_xml_node(
-            rsa_key_value.getElementsByTagName('Exponent')[0].childNodes)
-        d = self._process_xml_node(
-            rsa_key_value.getElementsByTagName('D')[0].childNodes)
-        p = self._process_xml_node(
-            rsa_key_value.getElementsByTagName('P')[0].childNodes)
-        q = self._process_xml_node(
-            rsa_key_value.getElementsByTagName('Q')[0].childNodes)
-        private_key = RSA.construct((modulus, exponent, d, p, q))
-        return private_key
+        try:
+            with open(xml_private_key_file, 'rb') as pkFile:
+                xml_private_key = pkFile.read()
+            rsa_key_value = minidom.parseString(xml_private_key)
+            modulus = self._process_xml_node(
+                rsa_key_value.getElementsByTagName('Modulus')[0].childNodes)
+            exponent = self._process_xml_node(
+                rsa_key_value.getElementsByTagName('Exponent')[0].childNodes)
+            d = self._process_xml_node(
+                rsa_key_value.getElementsByTagName('D')[0].childNodes)
+            p = self._process_xml_node(
+                rsa_key_value.getElementsByTagName('P')[0].childNodes)
+            q = self._process_xml_node(
+                rsa_key_value.getElementsByTagName('Q')[0].childNodes)
+            private_key = RSA.construct((modulus, exponent, d, p, q))
+            return private_key
+        except Exception as err:
+            logging.log(logging.ERROR, 'XML file is not valid')
+            raise SystemExit(err)
 
     # Generate Timestamp in format of "Y/m/d H:i:s" ========
     @staticmethod
@@ -137,9 +142,9 @@ class Pasargad(object):
             'Mobile': mobile,
             'Email': email,
             'Action': self.ACTION_PURCHASE,
-            'MerchantCode': self.merchant_code,
-            'TerminalCode': self.terminal_id,
-            'RedirectAddress': self.redirect_url,
+            'MerchantCode': self._merchant_code,
+            'TerminalCode': self._terminal_id,
+            'RedirectAddress': self._redirect_url,
             'TimeStamp': self._generate_timestamp(),
         }
         response = self._request_builder(self.URL_GET_TOKEN, params, 'POST')
@@ -159,8 +164,8 @@ class Pasargad(object):
             'transactionReferenceID': reference_id,
             'invoiceNumber': invoice_number,
             'invoiceDate': invoice_date,
-            'merchantCode': self.merchant_code,
-            'terminalCode': self.terminal_id,
+            'merchantCode': self._merchant_code,
+            'terminalCode': self._terminal_id,
         }
         response = self._request_builder(
             self.URL_CHECK_TRANSACTION, params, 'POST')
@@ -180,8 +185,8 @@ class Pasargad(object):
             'amount': amount,
             'invoiceNumber': invoice_number,
             'invoiceDate': invoice_date,
-            'merchantCode': self.merchant_code,
-            'terminalCode': self.terminal_id,
+            'merchantCode': self._merchant_code,
+            'terminalCode': self._terminal_id,
             'timeStamp': self._generate_timestamp(),
         }
         response = self._request_builder(
@@ -200,8 +205,8 @@ class Pasargad(object):
         params = {
             'invoiceNumber': invoice_number,
             'invoiceDate': invoice_date,
-            'merchantCode': self.merchant_code,
-            'terminalCode': self.terminal_id,
+            'merchantCode': self._merchant_code,
+            'terminalCode': self._terminal_id,
             'timeStamp': self._generate_timestamp(),
         }
         response = self._request_builder(self.URL_REFUND, params, 'POST')
