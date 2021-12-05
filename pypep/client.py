@@ -125,12 +125,12 @@ class Pasargad(object):
 
     # Generate Redirect Address for payment ====================================
     def redirect(self, amount, invoice_number, invoice_date, mobile='', email=''):
-        # type: (str, str, str, str, str) -> dict
+        # type: (str, str, str, str, str) -> str
         """
         Generate Payment URL 
         :param amount: Invoice amount
         :param invoice_number: invoice number
-        :param invoice_date: Invoice date in format of "Y/m/d H:i:s"
+        :param invoice_date: Invoice date in format of "Y/m/d H:M:S"
         :param mobile: optional - invoice owner mobile number
         :param email:  optional - invoice owner email address
         :return: str 
