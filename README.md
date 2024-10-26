@@ -17,7 +17,7 @@ pip install pypep-pepco
 ## Redirect User to Payment Gateway
 
 ```python
-from pypep import Pasargad
+from pypep import PasargadPaymentGateway
 
 # Create an object from PasargadPaymentGateway client
 # e.q: pasargad = PasargadPaymentGateway(123123,444444,"https://pep.co.ir/ipgtest","cert.xml")
