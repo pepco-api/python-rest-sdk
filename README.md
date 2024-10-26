@@ -19,9 +19,9 @@ pip install pypep-pepco
 ```python
 from pypep import Pasargad
 
-# Create an object from Pasargad client
-# e.q: pasargad = Pasargad(123123,444444,"https://pep.co.ir/ipgtest","cert.xml")
-pasargad = Pasargad('<merchant_code>', '<terminal_id>', '<redirect_url>', '<certification_file>')
+# Create an object from PasargadPaymentGateway client
+# e.q: pasargad = PasargadPaymentGateway(123123,444444,"https://pep.co.ir/ipgtest","cert.xml")
+pasargad = PasargadPaymentGateway('<merchant_code>', '<terminal_id>', '<redirect_url>', '<certification_file>')
 payment_url = pasargad.redirect(
     amount="15000",
     invoice_number="15001",
@@ -54,11 +54,11 @@ Store this information in a proper data storage and let's check transaction resu
 Bank:
 
 ```python
-from pypep import Pasargad
+from pypep import PasargadPaymentGateway
 
-# Create an object from Pasargad client
-# e.q: pasargad = Pasargad(123123,444444,"https://pep.co.ir/ipgtest","cert.xml")
-pasargad = Pasargad('<merchant_code>', '<terminal_id>', '<redirect_url>', '<certification_file>')
+# Create an object from PasargadPaymentGateway client
+# e.q: pasargad = PasargadPaymentGateway(123123,444444,"https://pep.co.ir/ipgtest","cert.xml")
+pasargad = PasargadPaymentGateway('<merchant_code>', '<terminal_id>', '<redirect_url>', '<certification_file>')
 
 response = pasargad.check_transaction(
     reference_id="637653306794022509",
@@ -96,7 +96,7 @@ from pypep import Pasargad
 
 # Create an object from Pasargad client
 # e.q: pasargad = Pasargad(123123,444444,"https://pep.co.ir/ipgtest","cert.xml")
-pasargad = Pasargad('<merchant_code>', '<terminal_id>', '<redirect_url>', '<certification_file>')
+pasargad = PasargadPaymentGateway('<merchant_code>', '<terminal_id>', '<redirect_url>', '<certification_file>')
 
 response = pasargad.verify_payment(
     amount="15000",
@@ -125,11 +125,11 @@ refund the client payment to his/her bank card.
 for this, use `refund()` method:
 
 ```python
-from pypep import Pasargad
+from pypep import PasargadPaymentGateway
 
-# Create an object from Pasargad client
-# e.q: pasargad = Pasargad(123123,444444,"https://pep.co.ir/ipgtest","cert.xml")
-pasargad = Pasargad('<merchant_code>', '<terminal_id>', '<redirect_url>', '<certification_file>')
+# Create an object from PasargadPaymentGateway client
+# e.q: pasargad = PasargadPaymentGateway(123123,444444,"https://pep.co.ir/ipgtest","cert.xml")
+pasargad = PasargadPaymentGateway('<merchant_code>', '<terminal_id>', '<redirect_url>', '<certification_file>')
 
 response = pasargad.refund(
     invoice_number="15001",
